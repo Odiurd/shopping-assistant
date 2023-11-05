@@ -1,0 +1,16 @@
+<html>
+<body>
+    {% for shop_name, items in grouped_items.items() %}
+    <h2 style="color: #333; font-size: 20px; margin-bottom: 15px;">{{ shop_name.upper() }}</h2>
+    <ul style="list-style-type: disc; padding-left: 20px; margin: 0;">
+        {% for item in items|sort(attribute='item_name') %}
+        <li style="margin-bottom: 15px;">
+            <b>{{ item.item_name }}</b><br>
+            Price: {{ item.base_price }}€ --> {{ item.discounted_price }}€<br>
+            <a href="{{ item.item_url }}">Product Link</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+</body>
+</html>
