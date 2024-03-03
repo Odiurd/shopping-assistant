@@ -1,3 +1,4 @@
+import json
 import requests
 import time
 
@@ -21,35 +22,24 @@ class BarboraTracker(ShopTracker):
         )
         response.raise_for_status()  # raise exception if not 200
         tree = html.fromstring(response.text)
-        current_price_element = tree.xpath(
-            "//span[@class='b-product-price-current-number']"
-        )
-        crossed_out_price_element = tree.xpath(
-            "//del[@class='b-product-crossed-out-price']"
-        )
 
         # TODO: if class="b-product-prices-block--loyalty" is present, requires promotion card
 
-        # extract prices
-        if not current_price_element:
-            raise ValueError("Current price not found for ", item_url)
-        if crossed_out_price_element:
-            # there is a discount -> crossed out number is the full price
-            base_price = (
-                crossed_out_price_element[0]
-                .text.strip()
-                .replace("€", "")
-                .replace(",", ".")
-            )
-            discounted_price = (
-                current_price_element[0].text.strip().replace("€", "").replace(",", ".")
-            )
+        data = json.loads(
+            tree.xpath(
+                "//div[@class='b-product-info b-product--js-hook']/@data-b-units"
+            )[0]
+        )
+        price = data["units"][0]["price"]
+        retail_price = data["units"][0].get("retail_price", None)
+        if retail_price:
+            # there is a discount -> crossed out number if the full price
+            discounted_price = price
+            base_price = retail_price
         else:
             # there is not a discount -> current price is the full price
-            base_price = (
-                current_price_element[0].text.strip().replace("€", "").replace(",", ".")
-            )
             discounted_price = None
+            base_price = price
 
         # extract ID
         item_id_element = tree.xpath(
